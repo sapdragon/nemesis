@@ -1,0 +1,22 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Server.Domain.Entities;
+using Server.Infrastructure.Data.Configurations;
+
+namespace Server.Infrastructure.Data
+{
+    public class DatabaseContext : DbContext
+    {
+        public DbSet<User> Users { get; set; }
+
+        public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+        }
+    }
+}
