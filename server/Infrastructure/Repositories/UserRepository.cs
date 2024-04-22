@@ -13,7 +13,7 @@ namespace Server.Infrastructure.Repositories
     {
         private readonly DatabaseContext _context;
 
-        UserRepository(DatabaseContext context)
+        public UserRepository(DatabaseContext context)
         {
             _context = context;
         }

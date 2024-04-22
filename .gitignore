@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Server files ignore ( C# )
+/server/obj/*
+/server/bin/*
+/server/Properties/*
+/server/.vs/*
