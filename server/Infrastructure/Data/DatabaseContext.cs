@@ -7,6 +7,8 @@ namespace Server.Infrastructure.Data
     public class DatabaseContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public DbSet<SteamAccount> SteamAccounts { get; set; }
+        public DbSet<HardwareInfo> HardwareInfos { get; set; }
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
         {

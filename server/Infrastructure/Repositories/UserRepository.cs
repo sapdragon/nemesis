@@ -2,10 +2,6 @@
 using Server.Domain.Entities;
 using Server.Domain.Interfaces;
 using Server.Infrastructure.Data;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Threading.Tasks;
 
 namespace Server.Infrastructure.Repositories
 {
@@ -48,7 +44,7 @@ namespace Server.Infrastructure.Repositories
 
         public async Task<User> GetUserBySteamIdAsync(ulong steamId)
         {
-            return await _context.Users.FirstAsync(user => user.SteamId == steamId);
+            return await _context.Users.FirstAsync(user => user.SteamAccounts.Any(account => account.SteamId == steamId));
         }
 
         public async Task UpdateUserAsync(User user)

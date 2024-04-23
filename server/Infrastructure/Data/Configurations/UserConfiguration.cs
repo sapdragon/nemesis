@@ -10,7 +10,8 @@ namespace Server.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<User> builder)
         {
             builder.HasKey(u => u.Id);
-            builder.Property(u => u.SteamId).IsRequired();
+            builder.HasMany(u => u.SteamAccounts).WithOne(s => s.User).HasForeignKey(s => s.UserId);
+            builder.HasOne(u => u.hardwareInfo).WithOne(h => h.User).HasForeignKey<HardwareInfo>(h => h.UserId);
             builder.Property(u => u.IsBanned).HasDefaultValue(false);
             builder.Property(u => u.BanReason).HasMaxLength(255);
         }
