@@ -8,7 +8,7 @@
         public bool IsBanned { get; set; }
         public string BanReason { get; set; }
 
-        public HardwareInfo hardwareInfo;
+        public HardwareInfo hardwareInfo { get; set; }
     }
 
 }

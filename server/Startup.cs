@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Server.Domain.Entities;
 using Server.Domain.Interfaces;
 using Server.Infrastructure.Data;
 using Server.Infrastructure.Repositories;
@@ -16,9 +17,9 @@ namespace Server
                 options.UseSqlite("Data Source=anti-cheat.db");
             });
 
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IHardwareInfoRepository, HardwareInfoRepository>();
-            services.AddScoped<IGameAccountRepository, GameAccountRepository>();
+            services.AddTransient<IUserRepository, UserRepository>();
+            services.AddTransient<IHardwareInfoRepository, HardwareInfoRepository>();
+            services.AddTransient<IGameAccountRepository, GameAccountRepository>();
         }
 
 
@@ -38,8 +39,6 @@ namespace Server
                 {
                     await context.Response.WriteAsync("Another message");
                 }).RequireHost("localhost:5000");
-
-
             });
         }
     }
@@ -50,7 +49,7 @@ namespace Server
         {
             var startup = new Startup();
             startup.ConfigureServices(services, configuration);
-            
+
             return services;
         }
 

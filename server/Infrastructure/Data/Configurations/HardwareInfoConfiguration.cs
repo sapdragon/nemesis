@@ -8,9 +8,9 @@ namespace Server.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<HardwareInfo> builder)
         {
-            builder.Property(h => h.SystemUUID).HasMaxLength(255);
-            builder.Property(h => h.MotherboardSerialNumber).HasMaxLength(255);
-            builder.Property(h => h.BasicHash).HasMaxLength(255);
+            builder.Property(h => h.SystemUUID).HasMaxLength(255).HasDefaultValue("");
+            builder.Property(h => h.MotherboardSerialNumber).HasMaxLength(255).HasDefaultValue("");
+            builder.Property(h => h.BasicHash).HasMaxLength(255).HasDefaultValue("");
 
             builder.Property(h => h.HardDiskSerials).HasConversion(
                 v => string.Join(',', v),

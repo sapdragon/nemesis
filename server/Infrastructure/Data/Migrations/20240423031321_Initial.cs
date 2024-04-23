@@ -6,26 +6,24 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Server.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class HardwareInfoAndGameAccounts : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "SteamId",
-                table: "Users");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "BanReason",
-                table: "Users",
-                type: "TEXT",
-                maxLength: 255,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "TEXT",
-                oldMaxLength: 255,
-                oldNullable: true);
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    IsBanned = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: false),
+                    BanReason = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false, defaultValue: "")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "HardwareInfos",
@@ -92,22 +90,8 @@ namespace Server.Infrastructure.Data.Migrations
             migrationBuilder.DropTable(
                 name: "SteamAccounts");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "BanReason",
-                table: "Users",
-                type: "TEXT",
-                maxLength: 255,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "TEXT",
-                oldMaxLength: 255);
-
-            migrationBuilder.AddColumn<ulong>(
-                name: "SteamId",
-                table: "Users",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: 0ul);
+            migrationBuilder.DropTable(
+                name: "Users");
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Server.Infrastructure.Data.Configurations
             builder.HasMany(u => u.SteamAccounts).WithOne(s => s.User).HasForeignKey(s => s.UserId);
             builder.HasOne(u => u.hardwareInfo).WithOne(h => h.User).HasForeignKey<HardwareInfo>(h => h.UserId);
             builder.Property(u => u.IsBanned).HasDefaultValue(false);
-            builder.Property(u => u.BanReason).HasMaxLength(255);
+            builder.Property(u => u.BanReason).HasDefaultValue("").HasMaxLength(255);
         }
     }
 }

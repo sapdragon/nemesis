@@ -80,8 +80,10 @@ namespace Server.Infrastructure.Data.Migrations
 
                     b.Property<string>("BanReason")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
 
                     b.Property<bool>("IsBanned")
                         .ValueGeneratedOnAdd()
@@ -119,7 +121,8 @@ namespace Server.Infrastructure.Data.Migrations
                 {
                     b.Navigation("SteamAccounts");
 
-                    b.Navigation("hardwareInfo");
+                    b.Navigation("hardwareInfo")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

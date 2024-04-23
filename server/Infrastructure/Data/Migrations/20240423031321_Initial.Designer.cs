@@ -11,8 +11,8 @@ using Server.Infrastructure.Data;
 namespace Server.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20240423022635_HardwareInfoAndGameAccounts")]
-    partial class HardwareInfoAndGameAccounts
+    [Migration("20240423031321_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -83,8 +83,10 @@ namespace Server.Infrastructure.Data.Migrations
 
                     b.Property<string>("BanReason")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
 
                     b.Property<bool>("IsBanned")
                         .ValueGeneratedOnAdd()
@@ -122,7 +124,8 @@ namespace Server.Infrastructure.Data.Migrations
                 {
                     b.Navigation("SteamAccounts");
 
-                    b.Navigation("hardwareInfo");
+                    b.Navigation("hardwareInfo")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
