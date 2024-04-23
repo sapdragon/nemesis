@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Server.Application.Interfaces;
+using Server.Application.Services;
 using Server.Domain.Entities;
 using Server.Domain.Interfaces;
 using Server.Infrastructure.Data;
@@ -17,9 +19,11 @@ namespace Server
                 options.UseSqlite("Data Source=anti-cheat.db");
             });
 
-            services.AddTransient<IUserRepository, UserRepository>();
-            services.AddTransient<IHardwareInfoRepository, HardwareInfoRepository>();
-            services.AddTransient<IGameAccountRepository, GameAccountRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IHardwareInfoRepository, HardwareInfoRepository>();
+            services.AddScoped<IGameAccountRepository, GameAccountRepository>();
+
+            services.AddScoped<IHeartbeatService, HeartbeatService>();
         }
 
 
