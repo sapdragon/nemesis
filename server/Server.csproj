@@ -7,11 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Application\Interfaces\" />
-    <Folder Include="Application\DTOs\" />
-    <Folder Include="Application\Services\" />
     <Folder Include="Delivery\HTTP\" />
-    <Folder Include="Delivery\Websockets\" />
     <Folder Include="Infrastructure\Data\Migrations\" />
   </ItemGroup>
 

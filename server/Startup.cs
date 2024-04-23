@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Server.Application.Interfaces;
 using Server.Application.Services;
 using Server.Domain.Entities;
@@ -24,6 +25,8 @@ namespace Server
             services.AddScoped<IGameAccountRepository, GameAccountRepository>();
 
             services.AddScoped<IHeartbeatService, HeartbeatService>();
+
+            services.AddControllers();
         }
 
 
@@ -34,15 +37,11 @@ namespace Server
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello world!");
-                }).RequireHost("localhost:5001");
+                endpoints.MapControllers()
+                    .RequireHost("localhost:5000")
+                    .WithGroupName("websockets");
 
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Another message");
-                }).RequireHost("localhost:5000");
+                
             });
         }
     }
