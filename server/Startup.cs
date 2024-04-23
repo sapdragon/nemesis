@@ -19,8 +19,6 @@ namespace Server
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IHardwareInfoRepository, HardwareInfoRepository>();
             services.AddScoped<IGameAccountRepository, GameAccountRepository>();
-
-            services.AddSignalR();
         }
 
 
