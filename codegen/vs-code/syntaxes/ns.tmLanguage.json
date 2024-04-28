@@ -1,0 +1,54 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "NS",
+    "patterns": [
+      {
+        "include": "#keywords"
+      },
+      {
+        "include": "#strings"
+      },
+      {
+        "include": "#comments"
+      }
+    ],
+    "repository": {
+      "keywords": {
+        "patterns": [
+          {
+            "name": "keyword.control.ns",
+            "match": "\\b(packet)\\b"
+          },
+          {
+            "name": "storage.type.ns",
+            "match": "\\b(int|string|float|bool)\\b"
+          }
+        ]
+      },
+      "strings": {
+        "name": "string.quoted.double.ns",
+        "begin": "\"",
+        "end": "\"",
+        "patterns": [
+          {
+            "name": "constant.character.escape.ns",
+            "match": "\\\\."
+          }
+        ]
+      },
+      "comments": {
+        "patterns": [
+          {
+            "name": "comment.line.double-slash.ns",
+            "match": "//.*"
+          },
+          {
+            "name": "comment.block.ns",
+            "begin": "/\\*",
+            "end": "\\*/"
+          }
+        ]
+      }
+    },
+    "scopeName": "source.ns"
+  }
