@@ -10,7 +10,13 @@ class TokenType(Enum):
     LEFT_BRACE = 'LEFT_BRACE'
     RIGHT_BRACE = 'RIGHT_BRACE'
     COMMENT = 'COMMENT'
+    LEFT_ANGLE = 'LEFT_ANGLE'
+    RIGHT_ANGLE = 'RIGHT_ANGLE'
+    COMMA = 'COMMA'
+
     EOF = 'EOF'
+
+
 
 class Token:
     def __init__(self, token_type: TokenType, value: str, line: int, column: int):
@@ -23,15 +29,51 @@ class ASTNode:
     pass
 
 class PacketNode(ASTNode):
-    def __init__(self, name: str, fields: List['FieldNode'], parent: Optional['PacketNode'] = None):
+    def __init__(self, name: str, fields: List['FieldNode'], parent: Optional['PacketNode'] = None, generic_arguments: List[str] = []):
         self.name = name
         self.fields = fields
         self.parent = parent
+        self.generic_arguments = generic_arguments if generic_arguments else []
+
+'''
+
+    u8 - 8-битное беззнаковое целое
+    u16 - 16-битное беззнаковое целое
+    u32 - 32-битное беззнаковое целое
+    u64 - 64-битное беззнаковое целое
+    i8 - 8-битное знаковое целое
+    i16 - 16-битное знаковое целое
+    i32 - 32-битное знаковое целое
+    i64 - 64-битное знаковое целое
+    f32 - 32-битное число с плавающей точкой
+    f64 - 64-битное число с плавающей точкой
+    bool - логическое значение
+    string - строка
+
+'''
+class FIELD_TYPE(Enum):
+    UNSiGNED_BYTE = 'u8'
+    UNSIGNED_SHORT = 'u16'
+    UNSIGNED_INT = 'u32'
+    UNSIGNED_LONG = 'u64'
+    SIGNED_BYTE = 'i8'
+    SIGNED_SHORT = 'i16'
+    SIGNED_INT = 'i32'
+    SIGNED_LONG = 'i64'
+    FLOAT = 'f32'
+    DOUBLE = 'f64'
+    BOOLEAN = 'bool'
+    ARRAY = 'array'
+    OBJECT = 'object'
+
+
 
 class FieldNode(ASTNode):
-    def __init__(self, name: str, data_type: str):
+    def __init__(self, name: str, data_type: str, is_generic: bool = False, generic_arguments: List[str] = []):
         self.name = name
         self.data_type = data_type
+        self.is_generic = is_generic
+        self.generic_arguments = generic_arguments if generic_arguments else []
 
 class Parser:
     def __init__(self, tokens: List[Token]):
@@ -46,24 +88,58 @@ class Parser:
             if packet:
                 if any(p.name == packet.name for p in packets):
                     raise RuntimeError(f"Packet with name '{packet.name}' already exists (line: {self.peek().line}, column: {self.peek().column})")
+                if packet.parent and not any(p.name == packet.parent.name for p in packets):
+                    raise RuntimeError(f"Parent packet with name '{packet.parent.name}' does not exist (line: {self.peek().line}, column: {self.peek().column})")
+                # check if generic arguments in fields are valid
+                for field in packet.fields:
+                    if field.is_generic:
+                        if not any(p.name == field.data_type for p in packets):
+                            raise RuntimeError(f"Generic argument '{field.data_type}' in field '{field.name}' is not a valid packet name (line: {self.peek().line}, column: {self.peek().column})")
+                        
+                        for generic_packet in packets:
+                            if generic_packet.name == field.data_type:
+                                if len(generic_packet.generic_arguments) != len(field.generic_arguments):
+                                    raise RuntimeError(f"Generic packet '{field.data_type}' has {len(generic_packet.generic_arguments)} generic arguments, but {field.name} has {len(field.generic_arguments)} (line: {self.peek().line}, column: {self.peek().column})")
 
                 packets.append(packet)
         return packets
-
+    
     def parse_packet(self) -> Optional[PacketNode]:
         if self.match(TokenType.PACKET):
             packet_token = self.previous()
             name = self.consume(TokenType.IDENTIFIER, "Ожидается имя пакета").value
             parent = None
+            generic_arguments = []
             if self.match(TokenType.COLON):
                 self.skip_comments()
                 parent_name = self.consume(TokenType.IDENTIFIER, "Ожидается имя родительского пакета").value
                 parent = PacketNode(parent_name, [])
+            elif self.match(TokenType.LEFT_ANGLE):
+                while not self.check(TokenType.RIGHT_ANGLE):
+                    self.skip_comments()
+                    generic_argument = self.consume(TokenType.IDENTIFIER, "Ожидается имя обобщенного аргумента").value
+                    generic_arguments.append(generic_argument)
+                    
+                    if not self.match(TokenType.COMMA):
+                        break
+
+                self.consume(TokenType.RIGHT_ANGLE, "Ожидается '>' после списка обобщенных аргументов")
+                
+        
+                    
+
             self.skip_comments()
             self.consume(TokenType.LEFT_BRACE, "Ожидается '{' после имени пакета")
             fields = self.parse_fields()
+
+            # check if types are valid
+            for field in fields:
+                if generic_arguments:
+                    if not field.data_type in generic_arguments:
+                        raise RuntimeError(f"Field '{field.name}' has invalid data type. It should be one of the generic arguments: {', '.join(generic_arguments)} (line: {self.peek().line}, column: {self.peek().column})")
+
             self.consume(TokenType.RIGHT_BRACE, "Ожидается '}' после полей пакета")
-            return PacketNode(name, fields, parent)
+            return PacketNode(name, fields, parent, generic_arguments)
         return None
 
     def parse_fields(self) -> List[FieldNode]:
@@ -74,7 +150,23 @@ class Parser:
                 name = self.consume(TokenType.IDENTIFIER, "Ожидается имя поля").value
                 self.consume(TokenType.COLON, "Ожидается ':' после имени поля")
                 data_type = self.parse_data_type()
-                fields.append(FieldNode(name, data_type))
+
+                # Check if the field is generic
+                is_generic = False
+                generic_arguments = []
+                if self.match(TokenType.LEFT_ANGLE):
+                    is_generic = True
+                    while not self.check(TokenType.RIGHT_ANGLE):
+                        self.skip_comments()
+                        generic_argument = self.consume(TokenType.IDENTIFIER, "Ожидается имя обобщенного аргумента").value
+                        generic_arguments.append(generic_argument)
+                        
+                        if not self.match(TokenType.COMMA):
+                            break
+
+                    self.consume(TokenType.RIGHT_ANGLE, "Ожидается '>' после списка обобщенных аргументов")
+
+                fields.append(FieldNode(name, data_type, is_generic, generic_arguments))
             else:
                 break
         return fields
@@ -148,6 +240,18 @@ def tokenize(code: str) -> List[Token]:
             tokens.append(Token(TokenType.COLON, ':', line, column))
             column += 1
             current += 1
+        elif char == '<':
+            tokens.append(Token(TokenType.LEFT_ANGLE, '<', line, column))
+            column += 1
+            current += 1
+        elif char == '>':
+            tokens.append(Token(TokenType.RIGHT_ANGLE, '>', line, column))
+            column += 1
+            current += 1
+        elif char == ',':
+            tokens.append(Token(TokenType.COMMA, ',', line, column))
+            column += 1
+            current += 1
         elif char == '/' and current + 1 < len(code):
             if code[current + 1] == '/':
                 start = current
@@ -194,11 +298,11 @@ def parse(code: str) -> List[PacketNode]:
     return parser.parse()
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Usage: python parser.py <input_file>")
-        sys.exit(1)
+  #  if len(sys.argv) < 2:
+    #    print("Usage: python parser.py <input_file>")
+   #     sys.exit(1)
 
-    input_file = sys.argv[1]
+    input_file = "W:\\Github\\nemesis\\codegen\\example.ns"
     with open(input_file, 'r') as f:
         code = f.read()
         try:
@@ -206,7 +310,30 @@ if __name__ == '__main__':
             for packet in packets:
                 print(f"Packet: {packet.name}")
                 for field in packet.fields:
-                    print(f"  Field: {field.name} ({field.data_type})")
+                    if field.is_generic:
+                        print(f"  Generic field: {field.name} ({field.data_type}<{', '.join(field.generic_arguments)}>)")
+                        # get generic packet and print its fields ( insert generic arguments )
+                        for generic_packet in packets:
+                            if generic_packet.name == field.data_type:
+                                # create dictionary with generic arguments
+                                generic_args = {}
+                                for i, arg in enumerate(generic_packet.generic_arguments):
+                                    generic_args[arg] = field.generic_arguments[i]
+                                # print fields
+                                for field in generic_packet.fields:
+                                    # print example 
+                                    # Change from 
+                                    # packet Point < T > { x: T; y: T; }
+                                    # to 
+                                    # packet Point < int > { x: int; y: int; }
+                                    # to convet generic arguments to real arguments we have dictionary generic_args
+                                    # so we can replace T with generic_args[T]
+                                    print(f"  Field: {field.name} ({generic_args.get(field.data_type, "UNKNOWN")})")
+                                    
+
+
+                    else:
+                        print(f"  Field: {field.name} ({field.data_type})")
         except RuntimeError as e:
             print(e)
         except Exception as e:

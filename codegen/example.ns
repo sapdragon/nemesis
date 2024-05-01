@@ -1,3 +1,9 @@
-packet MyPacket {
-    some: string // hello world!
+packet Point< T, Y >
+ {
+    x : T
+    y : Y
+}
+
+packet test {
+    my: Point < float64, int32 >
 }
