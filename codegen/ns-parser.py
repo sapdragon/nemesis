@@ -16,6 +16,7 @@ class TokenType(Enum):
     LEFT_SQUARE_BRACKET = 'LEFT_SQUARE_BRACKET'
     RIGHT_SQUARE_BRACKET = 'RIGHT_SQUARE_BRACKET'
     COMMA = 'COMMA'
+    NUMBER = 'NUMBER'
 
     EOF = 'EOF'
 
@@ -37,6 +38,16 @@ class PacketNode(ASTNode):
         self.fields = fields
         self.parent = parent
         self.generic_arguments = generic_arguments if generic_arguments else []
+
+
+    def is_generic(self):
+        return len(self.generic_arguments) > 0
+    
+    def is_child(self):
+        return self.parent is not None
+    
+    def is_root(self):
+        return self.parent is None
 
 '''
 
@@ -67,17 +78,34 @@ class FIELD_TYPE(Enum):
     DOUBLE = 'f64'
     BOOLEAN = 'bool'
     ARRAY = 'array'
+    FIXED_ARRAY = 'fixed_array'
     OBJECT = 'object'
 
 
 class FieldNode(ASTNode):
-    def __init__(self, name: str, data_type_name: str, data_type: FIELD_TYPE, is_generic: bool = False, generic_arguments: List[str] = [], array_type: FIELD_TYPE = None):
+    def __init__(self, name: str, data_type_name: str, data_type: FIELD_TYPE, is_generic: bool = False, generic_arguments: List[str] = [], array_type: FIELD_TYPE = None, array_fixed_size: int = None):
         self.name = name
         self.data_type_name = data_type_name
         self.is_generic = is_generic
         self.generic_arguments = generic_arguments if generic_arguments else []
         self.data_type = data_type
         self.array_type = array_type
+        self.array_fixed_size = array_fixed_size
+
+    def is_array(self):
+        return self.data_type == FIELD_TYPE.ARRAY
+    
+    def is_fixed_array(self):
+        return self.data_type == FIELD_TYPE.FIXED_ARRAY
+    
+    def is_object(self):
+        return self.data_type == FIELD_TYPE.OBJECT
+    
+    def is_primitive(self):
+        return self.data_type != FIELD_TYPE.ARRAY and self.data_type != FIELD_TYPE.FIXED_ARRAY and self.data_type != FIELD_TYPE.OBJECT
+    
+    def is_generic(self):
+        return self.is_generic
 
 class Parser:
     def __init__(self, tokens: List[Token]):
@@ -155,9 +183,16 @@ class Parser:
                 data_type_name = self.parse_data_type_name()
                 data_type = self.parse_data_type(data_type_name)
                 array_type = None
+                fixed_size_array = 0
                 if data_type == FIELD_TYPE.ARRAY:
-                    data_type_name = data_type_name[:-2]
-                    array_type = self.parse_data_type(data_type_name)
+                    if data_type_name.endswith('[]'):
+                        data_type_name = data_type_name[:-2]
+                        array_type = self.parse_data_type(data_type_name)
+                    else:
+                        array_type = self.parse_data_type(data_type_name[:-3])
+                        data_type_name = data_type_name[-2:-1]
+                        fixed_size_array = int(data_type_name)
+
 
                 is_generic = False
                 generic_arguments = []
@@ -178,7 +213,7 @@ class Parser:
                     if field.name == name:
                         raise RuntimeError(f"Field with name '{name}' already exists (line: {self.peek().line}, column: {self.peek().column})")
 
-                fields.append(FieldNode(name, data_type_name, data_type, is_generic, generic_arguments, array_type))
+                fields.append(FieldNode(name, data_type_name, data_type, is_generic, generic_arguments, array_type, fixed_size_array))
             else:
                 break
         return fields
@@ -188,6 +223,14 @@ class Parser:
         if self.match(TokenType.IDENTIFIER):
             return self.previous().value
         elif self.match(TokenType.LEFT_SQUARE_BRACKET):
+            # check if is fixed size array
+            if self.match(TokenType.NUMBER):
+                number = self.previous().value
+                self.consume(TokenType.RIGHT_SQUARE_BRACKET, "Ожидается ']' после размера массива")
+                data_type_name = self.parse_data_type_name()
+                return data_type_name + f'[{number}]'
+            
+
             self.consume(TokenType.RIGHT_SQUARE_BRACKET, "Ожидается ']' после имени типа")
             data_type_name = self.parse_data_type_name()
             return data_type_name + '[]'
@@ -219,6 +262,8 @@ class Parser:
             return FIELD_TYPE.BOOLEAN
         elif name.endswith('[]'):
             return FIELD_TYPE.ARRAY
+        elif re.match(r'^\w+\[\d+\]$', name):
+            return FIELD_TYPE.FIXED_ARRAY
         else:
             return FIELD_TYPE.OBJECT
 
@@ -328,13 +373,15 @@ def tokenize(code: str) -> List[Token]:
                 column += len(comment)
             else:
                 raise RuntimeError(f"Unexpected character '/' (line: {line}, column: {column})")
-        elif re.match(r'[a-zA-Z_]', char):
+        elif re.match(r'[a-zA-Z0-9_]', char):
             start = current
             while current < len(code) and (re.match(r'[a-zA-Z0-9_]', code[current])):
                 current += 1
             value = code[start:current]
             if value == 'packet':
                 tokens.append(Token(TokenType.PACKET, value, line, column))
+            elif re.match(r'[0-9]', value):
+                tokens.append(Token(TokenType.NUMBER, value, line, column))
             else:
                 tokens.append(Token(TokenType.IDENTIFIER, value, line, column))
             column += len(value)
@@ -384,7 +431,10 @@ if __name__ == '__main__':
                                     
                     else:
                         if field.data_type == FIELD_TYPE.ARRAY:
-                            print(f"  Field: {field.name} ({field.data_type_name}[]) Type {field.data_type}")
+                            if field.array_fixed_size:
+                                print(f"  Field: {field.name} ({field.data_type_name}[{field.array_fixed_size}]) Type {field.data_type}")
+                            else:
+                                print(f"  Field: {field.name} ({field.data_type_name}[]) Type {field.data_type}")
                         else:
                             print(f"  Field: {field.name} ({field.data_type_name}) Type {field.data_type}")
         except RuntimeError as e:

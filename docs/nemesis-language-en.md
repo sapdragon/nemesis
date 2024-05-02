@@ -51,6 +51,7 @@ Data types can be primitive or composite. Primitive data types:
 
 Composite data types:
 - `[]<type>` - a slice (a variable-length array) of elements of type `<type>`
+- `[<size>]<type>` - a fixed-length array of `<size>` elements of type `<type>`
 
 
 Nemesis supports constant generics, which are determined at compile-time. Generics allow the creation of parameterized packets, where the data types of the fields can be specified when using the packet.

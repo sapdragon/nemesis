@@ -12,6 +12,7 @@ packet Base {
 packet MyString {
     Size: u64
     Data: []u8
+    Some: [2]u16
 }
 
 packet UserAuthRequest {
@@ -26,8 +27,8 @@ packet AnotherValveDetect : Base {
 
 
 packet FinalPacket : Base {
-    MyPoint : Point < float64, int32 >
-    SomeMagicValue : u64
-    MySlice : []u32
+    MyPoint: Point < float64, int32 >
+    SomeMagicValue: u64
+    MySlice: []u32
     NameOfDeveloper: MyString
 }
