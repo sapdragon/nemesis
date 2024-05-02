@@ -172,6 +172,11 @@ class Parser:
                             break
 
                     self.consume(TokenType.RIGHT_ANGLE, "Ожидается '>' после списка обобщенных аргументов")
+                
+
+                for field in fields:
+                    if field.name == name:
+                        raise RuntimeError(f"Field with name '{name}' already exists (line: {self.peek().line}, column: {self.peek().column})")
 
                 fields.append(FieldNode(name, data_type_name, data_type, is_generic, generic_arguments, array_type))
             else:
@@ -344,11 +349,6 @@ def parse(code: str) -> List[PacketNode]:
     parser = Parser(tokens)
     return parser.parse()
 
-
-    for packet in packets:
-        add_node(packet)
-
-    dot.render('ast_graph', view=True)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
