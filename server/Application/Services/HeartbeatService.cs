@@ -13,7 +13,7 @@ namespace Server.Application.Services
             _userRepository = userRepository;
         }
 
-        public (string token, int userId) Authenticate(InitialHeartbeatDto inputInitialHeartbeat)
+        public (string token, int userId) Authenticate(InitialHeartbeatDtoRequest inputInitialHeartbeat)
         {
             throw new NotImplementedException();
         }

@@ -20,11 +20,20 @@ namespace Server
                 options.UseSqlite("Data Source=anti-cheat.db");
             });
 
+            var myConfiguration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
+
+            services.AddSingleton<IConfiguration>(myConfiguration);
+
+
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IHardwareInfoRepository, HardwareInfoRepository>();
             services.AddScoped<IGameAccountRepository, GameAccountRepository>();
 
-            services.AddScoped<IHeartbeatService, HeartbeatService>();
+            services.AddTransient<IHeartbeatService, HeartbeatService>();
 
             services.AddControllers();
         }
@@ -38,10 +47,13 @@ namespace Server
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers()
-                    .RequireHost("localhost:5000")
-                    .WithGroupName("websockets");
+                    .WithGroupName("websockets").RequireHost("localhost:25565");
 
-                
+                endpoints.MapControllers().WithGroupName("http")
+            .RequireHost("localhost:25566")
+ ;
+
+
             });
         }
     }

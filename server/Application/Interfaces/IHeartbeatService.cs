@@ -4,6 +4,7 @@ namespace Server.Application.Interfaces
 {
     public interface IHeartbeatService
     {
-        (string token, int userId) Authenticate(InitialHeartbeatDto inputInitialHeartbeat);
+        (string token, int userId) Authenticate(InitialHeartbeatDtoRequest inputInitialHeartbeat);
     }
 }
+ 

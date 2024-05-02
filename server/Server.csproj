@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Delivery\HTTP\" />
     <Folder Include="Infrastructure\Data\Migrations\" />
   </ItemGroup>
 

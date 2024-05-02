@@ -4,6 +4,30 @@ packet Point< T, Y >
     y : Y
 }
 
-packet test {
-    my: Point < float64, int32 >
+packet Base {
+    someField: u8
+}
+
+
+packet MyString {
+    Size: u64
+    Data: []u8
+}
+
+packet UserAuthRequest {
+    Nickname: MyString
+}
+
+packet AnotherValveDetect : Base {
+    AmountOfVMT : u64
+    MagicServerValue: u32
+}
+
+
+
+packet FinalPacket : Base {
+    MyPoint : Point < float64, int32 >
+    SomeMagicValue : u64
+    MySlice : []u32
+    NameOfDeveloper: MyString
 }

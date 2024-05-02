@@ -47,7 +47,31 @@ Data types can be primitive or composite. Primitive data types:
 - `f32` - 32-bit floating-point number
 - `f64` - 64-bit floating-point number
 - `bool` - Boolean value
-- `string` - String
+- `string` - string (actually a structure that contains the string length and a u8 slice)
+
+Composite data types:
+- `[]<type>` - a slice (a variable-length array) of elements of type `<type>`
+
+
+Nemesis supports constant generics, which are determined at compile-time. Generics allow the creation of parameterized packets, where the data types of the fields can be specified when using the packet.
+To define a generic, angle brackets `< >` are used after the packet name, inside which the names of the type parameters are specified:
+```
+package name<T1, T2> {
+    field1: T1;
+    field2: T2;
+}
+```
+
+When using a parameterized packet, it is necessary to specify the concrete data types for the type parameters:
+```
+package some_package {
+    field1: name<u8, u16>;
+}
+```
+
+In this example `field1` is a concrete instantiation of the `name` packet, where `T1` is replaced with `u8`, and `T2` with `u16`.
+
+Generics in Nemesis are constant and are determined at compile-time. This means that all type parameters must be known at the compilation stage and cannot be changed during runtime (which is logical, since Nemesis is a language for describing data packets, not a programming language).
 
 Packets can inherit from other packets using `:`:
 
