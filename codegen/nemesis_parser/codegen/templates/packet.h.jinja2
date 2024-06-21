@@ -1,0 +1,46 @@
+#ifndef NEMESIS_PACKETS_H
+#define NEMESIS_PACKETS_H
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+
+{% for enum in program.declarations if isinstance(enum, Enum) %}
+typedef enum {
+    {% for value in enum.values %}
+    {{ enum.name }}_{{ value }}{% if not loop.last %},{% endif %}
+
+    {% endfor %}
+} {{ enum.name }};
+
+{% endfor %}
+
+{% for alias in program.declarations if isinstance(alias, TypeAlias) %}
+typedef {{ c_generator.c_type(Field(name='', data_type=alias.aliased_type)) }} {{ alias.name }};
+
+{% endfor %}
+
+{% for packet in program.declarations if isinstance(packet, Packet) %}
+{% if packet.generic_params %}
+#define {{ c_generator.generic_type_name(packet) }}({% for param in packet.generic_params %}{{ param }}{% if not loop.last %}, {% endif %}{% endfor %}) \
+typedef struct { \
+    {% for field in packet.fields %}
+    {{ c_generator.c_type(field) }} {{ field.name }}{% if field.bit_size is not none %}:{{ field.bit_size }}{% endif %}{{ c_generator.c_default_value(field) }}; \
+    {% endfor %}
+} {{ packet.name }}_##{% for param in packet.generic_params %}{{ param }}##{% endfor %}
+
+{% else %}
+typedef struct {
+    {% for field in packet.fields %}
+    {{ c_generator.c_type(field) }} {{ field.name }}{% if field.bit_size is not none %}:{{ field.bit_size }}{% endif %}{{ c_generator.c_default_value(field) }};
+    {% endfor %}
+} {{ packet.name }};
+
+void {{ packet.name }}_init({{ packet.name }}* packet);
+void {{ packet.name }}_serialize(const {{ packet.name }}* packet, uint8_t* buffer, size_t* size);
+void {{ packet.name }}_deserialize({{ packet.name }}* packet, const uint8_t* buffer, size_t size);
+{% endif %}
+
+{% endfor %}
+
+#endif // NEMESIS_PACKETS_H

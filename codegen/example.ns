@@ -1,19 +1,30 @@
+import "common_Types.ns"
+
 packet Point< T, Y >
  {
     x : T
     y : Y
 }
 
-packet Base {
-    someField: u8
-}
+type UserID = u64
 
+enum Color : UserID {
+    RED,
+    GREEN,
+    BLUE
+}
 
 packet MyString {
     Size: u64
     Data: []u8
     Some: [2]u16
 }
+
+packet MyString1 {
+    Size: u64
+    Data: []u8
+    Some: [2]u16
+}   
 
 packet UserAuthRequest {
     Nickname: MyString
@@ -27,7 +38,7 @@ packet AnotherValveDetect : Base {
 
 
 packet FinalPacket : Base {
-    MyPoint: Point < float64, int32 >
+    MyPoint: Point < f64, i32 >
     SomeMagicValue: u64
     MySlice: []u32
     NameOfDeveloper: MyString

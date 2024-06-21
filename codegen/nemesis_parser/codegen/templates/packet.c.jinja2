@@ -1,0 +1,29 @@
+#include "nemesis_packets.h"
+#include <string.h>
+
+{% for packet in program.declarations if isinstance(packet, Packet) and not packet.generic_params %}
+void {{ packet.name }}_init({{ packet.name }}* packet) {
+    memset(packet, 0, sizeof({{ packet.name }}));
+    {% for field in packet.fields if field.default_value is not none %}
+    packet->{{ field.name }} = {{ field.default_value }};
+    {% endfor %}
+}
+
+void {{ packet.name }}_serialize(const {{ packet.name }}* packet, uint8_t* buffer, size_t* size) {
+    size_t offset = 0;
+    {% for field in packet.fields %}
+    memcpy(buffer + offset, &packet->{{ field.name }}, sizeof(packet->{{ field.name }}));
+    offset += sizeof(packet->{{ field.name }});
+    {% endfor %}
+    *size = offset;
+}
+
+void {{ packet.name }}_deserialize({{ packet.name }}* packet, const uint8_t* buffer, size_t size) {
+    size_t offset = 0;
+    {% for field in packet.fields %}
+    memcpy(&packet->{{ field.name }}, buffer + offset, sizeof(packet->{{ field.name }}));
+    offset += sizeof(packet->{{ field.name }});
+    {% endfor %}
+}
+
+{% endfor %}
